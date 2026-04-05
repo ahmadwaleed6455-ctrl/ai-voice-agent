@@ -1,69 +1,141 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LRH Digital Assistant</title>
+    <title>LRH AI Assistant - Fahad</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+    <style>
+        .chat-container { height: calc(100vh - 200px); }
+        .bg-lrh { background-color: #004a99; } /* LRH Theme Blue */
+    </style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col">
+<body class="bg-gray-100 font-sans">
 
-    <div class="bg-blue-700 text-white p-4 shadow-lg flex items-center justify-between">
-        <h1 class="text-lg font-bold">LRH Sara (AI Assistant)</h1>
-        <div class="bg-green-500 h-3 w-3 rounded-full animate-pulse"></div>
-    </div>
+    <header class="bg-lrh text-white p-4 shadow-lg flex justify-between items-center">
+        <h1 class="text-xl font-bold"><i class="fas fa-hospital-user mr-2"></i> LRH Sara (AI Assistant)</h1>
+        <span class="text-sm bg-blue-700 px-2 py-1 rounded">Status: Online</span>
+    </header>
 
-    <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-4">
-        <div class="bg-white p-3 rounded-lg shadow-sm max-w-[80%] text-sm">
-            Assalam o Alaikum! Main Sara hoon. Main aapki kya madad kar sakti hoon?
+    <main class="container mx-auto max-w-2xl p-4">
+        <div id="chat-box" class="chat-container overflow-y-auto bg-white rounded-lg shadow-inner p-4 mb-4 space-y-4 border border-gray-200">
+            <div class="flex justify-start">
+                <div class="bg-blue-100 text-blue-800 p-3 rounded-lg max-w-[80%] shadow-sm">
+                    Assalam o Alaikum! Main Fahad hoon. Main aapki kya madad kar sakti hoon?
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="p-4 bg-white border-t flex items-center gap-2">
-        <input id="user-input" type="text" placeholder="Sawal likhein..." class="flex-1 border rounded-full px-4 py-2 focus:outline-none">
-        
-        <button id="voice-btn" class="bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition">
-            <i class="fas fa-microphone"></i>
-        </button>
+        <div class="flex space-x-2 items-center bg-white p-3 rounded-full shadow-lg border border-gray-300">
+            <input type="text" id="user-input" placeholder="Type your message..." class="flex-1 outline-none px-4 py-2 bg-transparent">
+            
+            <button id="voice-btn" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md">
+                <i class="fas fa-microphone text-xl"></i>
+            </button>
 
-        <button id="send-btn" class="bg-green-600 text-white rounded-full p-3">
-            <i class="fas fa-paper-plane"></i>
-        </button>
-    </div>
+            <button id="send-btn" class="bg-green-600 hover:bg-green-700 text-white w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </main>
 
     <script>
-        const sendBtn = document.getElementById('send-btn');
-        const userInput = document.getElementById('user-input');
         const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const voiceBtn = document.getElementById('voice-btn');
+        let currentRoom = null;
 
-        function addMessage(text, isUser = false) {
+        // 1. Function to add messages to UI
+        function addMessage(text, isUser) {
             const div = document.createElement('div');
-            div.className = isUser ? "bg-blue-100 p-3 rounded-lg shadow-sm max-w-[80%] ml-auto text-sm" : "bg-white p-3 rounded-lg shadow-sm max-w-[80%] text-sm";
-            div.innerText = text;
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `
+                <div class="${isUser ? 'bg-green-500 text-white' : 'bg-blue-100 text-blue-800'} p-3 rounded-lg max-w-[80%] shadow-sm animate-fade-in">
+                    ${text}
+                </div>
+            `;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // 2. TEXT CHAT Logic
         sendBtn.onclick = async () => {
-            const msg = userInput.value;
-            if(!msg) return;
+            const msg = userInput.value.trim();
+            if (!msg) return;
+
             addMessage(msg, true);
-            userInput.value = "";
+            userInput.value = '';
 
-            const res = await fetch('/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: msg, user_id: 'patient_001' })
-            });
-            const data = await res.json();
-            addMessage(data.reply);
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await response.json();
+                addMessage(data.reply, false);
+            } catch (error) {
+                addMessage("Error: Connection failed.", false);
+            }
         };
 
-        // Voice Click Handler (For later LiveKit integration)
-        document.getElementById('voice-btn').onclick = () => {
-            alert("Voice Calling Feature is starting... connecting to LiveKit.");
+        // 3. VOICE CALL (LiveKit) Logic
+        voiceBtn.onclick = async () => {
+            if (currentRoom) {
+                // Call end karna
+                currentRoom.disconnect();
+                currentRoom = null;
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                voiceBtn.classList.replace('bg-red-600', 'bg-blue-600');
+                addMessage("Call ended.", false);
+                return;
+            }
+
+            // Loading state
+            voiceBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xl"></i>';
+
+            try {
+                // Step A: Backend se token lein
+                const res = await fetch('/get_voice_token');
+                if (!res.ok) throw new Error("Token fetch failed");
+                const data = await res.json();
+                
+                // Step B: LiveKit Room connect karein
+                const room = new LivekitClient.Room();
+                await room.connect(data.url, data.token);
+                currentRoom = room;
+                
+                // Step C: Microphone ON karein
+                await room.localParticipant.setMicrophoneEnabled(true);
+                
+                // Step D: AUDIO LISTENER (Sara ki awaz ke liye)
+                room.on('trackSubscribed', (track) => {
+                    if (track.kind === 'audio') {
+                        // Speaker se awaz connect karna
+                        const audioElement = track.attach();
+                        document.body.appendChild(audioElement);
+                        console.log("Audio track attached successfully");
+                    }
+                });
+
+                // UI Update
+                voiceBtn.innerHTML = '<i class="fas fa-phone-slash text-xl"></i>';
+                voiceBtn.classList.replace('bg-blue-600', 'bg-red-600');
+                addMessage("Sara se call connect ho gayi hai. Boliye...", false);
+                
+            } catch (error) {
+                console.error(error);
+                alert("Call Error: " + error.message);
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            }
         };
+
+        // Enter key se send karna
+        userInput.onkeypress = (e) => { if (e.key === 'Enter') sendBtn.click(); };
     </script>
+
 </body>
 </html>
