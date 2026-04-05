@@ -1,0 +1,63 @@
+🏪 Restaurant 1: Fahad Pizza Hub
+Restaurant Name: Fahad Pizza Hub
+Location: Peshawar, Pakistan
+Delivery Time: 30 to 45 minutes
+Delivery Charges: Free above 1000 Rs, otherwise 150 Rs
+
+Menu:
+- Chicken Tikka Pizza: Small 500, Medium 900, Large 1300
+- Fajita Pizza: Small 550, Medium 950, Large 1400
+- Cheese Bites: 300
+- Cold Drink (1L): 150
+
+Policies:
+- No beef items available
+- No burgers or sandwiches
+- Only chicken-based pizzas
+🏪 Restaurant 2: Karachi Biryani House
+Restaurant Name: Karachi Biryani House
+Location: Karachi, Pakistan
+Delivery Time: 40 to 60 minutes
+Delivery Charges: 100 Rs flat
+
+Menu:
+- Chicken Biryani: Half 250, Full 450
+- Beef Biryani: Half 300, Full 550
+- Zarda: 150
+- Raita: 50
+
+Policies:
+- Spicy food by default
+- Beef is available
+- No pizza or fast food
+🏪 Restaurant 3: Lahore BBQ Nights
+Restaurant Name: Lahore BBQ Nights
+Location: Lahore, Pakistan
+Delivery Time: 50 minutes
+Delivery Charges: Free delivery
+
+Menu:
+- Chicken Karahi: Half 900, Full 1600
+- Mutton Karahi: Half 1400, Full 2500
+- Seekh Kabab (6 pcs): 600
+- Naan: 30
+
+Policies:
+- Fresh cooking only (no pre-cooked meals)
+- Takes longer during peak hours
+🏪 Restaurant 4: Islamabad Cafe
+Restaurant Name: Islamabad Cafe
+Location: Islamabad, Pakistan
+Delivery Time: 25 to 35 minutes
+Delivery Charges: 200 Rs
+
+Menu:
+- Zinger Burger: 400
+- Club Sandwich: 450
+- Fries: 250
+- Coffee: 300
+
+Policies:
+- Only fast food items
+- No desi dishes
+- No biryani or karahi
