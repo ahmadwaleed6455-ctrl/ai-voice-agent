@@ -1,7 +1,9 @@
 import os
+import json
 from flask import Flask, request, jsonify, render_template
 from groq import Groq
-from firebase_admin import credentials, firestore, initialize_app
+import firebase_admin
+from firebase_admin import credentials, firestore
 from twilio.twiml.messaging_response import MessagingResponse
 from dotenv import load_dotenv
 
@@ -11,21 +13,30 @@ app = Flask(__name__, template_folder='templates', static_folder='static')
 # 1. Groq Setup
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# 2. Firebase Setup (JSON file Codespace mein upload karni hogi)
-cred = credentials.Certificate("firebase_key.json")
-initialize_app(cred)
-db = firestore.client()
+# 2. Firebase Security Setup
+fb_content = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 
-# Hospital Data
+if fb_content:
+    try:
+        fb_dict = json.loads(fb_content)
+        cred = credentials.Certificate(fb_dict)
+        firebase_admin.initialize_app(cred)
+        db = firestore.client()
+        print("✅ Firebase Connected Successfully!")
+    except Exception as e:
+        print(f"❌ Firebase Error: {e}")
+else:
+    print("⚠️ Error: FIREBASE_SERVICE_ACCOUNT not found in Render env!")
+
+# Hospital Data Read
 with open("hospital_data.txt", "r", encoding="utf-8") as f:
     hospital_info = f.read()
 
-# --- WEB FRONTEND ROUTE ---
+# --- WEB ROUTES ---
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# --- WEB CHAT API ---
 @app.route('/chat', methods=['POST'])
 def web_chat():
     data = request.json
@@ -37,19 +48,21 @@ def web_chat():
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}]
     )
+    # FIX: added here
     reply = completion.choices.message.content
 
     # Save to Firebase
-    db.collection('chats').add({
-        'user_id': user_id,
-        'message': user_msg,
-        'reply': reply,
-        'timestamp': firestore.SERVER_TIMESTAMP
-    })
+    if fb_content:
+        db.collection('chats').add({
+            'user_id': user_id,
+            'message': user_msg,
+            'reply': reply,
+            'timestamp': firestore.SERVER_TIMESTAMP
+        })
 
     return jsonify({'reply': reply})
 
-# --- WHATSAPP ROUTE (Existing) ---
+# --- WHATSAPP ROUTE ---
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
     incoming_msg = request.values.get('Body', '').lower()
@@ -59,7 +72,11 @@ def whatsapp_reply():
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}]
     )
-    reply_text = completion.choices.message.content
+    try:
+    completion = client.chat.completions.create(...)
+    reply_text = completion.choices[0].message.content
+except Exception as e:
+    reply_text = "Maazrat, system temporarily unavailable hai."
     
     resp = MessagingResponse()
     resp.message(reply_text)
