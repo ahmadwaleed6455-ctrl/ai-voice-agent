@@ -72,11 +72,9 @@ def whatsapp_reply():
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}]
     )
-    try:
-    completion = client.chat.completions.create(...)
+    
+      # Correct response extraction
     reply_text = completion.choices[0].message.content
-except Exception as e:
-    reply_text = "Maazrat, system temporarily unavailable hai."
     
     resp = MessagingResponse()
     resp.message(reply_text)
