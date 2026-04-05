@@ -1,1 +1,69 @@
-html
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRH Digital Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+
+    <div class="bg-blue-700 text-white p-4 shadow-lg flex items-center justify-between">
+        <h1 class="text-lg font-bold">LRH Sara (AI Assistant)</h1>
+        <div class="bg-green-500 h-3 w-3 rounded-full animate-pulse"></div>
+    </div>
+
+    <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-4">
+        <div class="bg-white p-3 rounded-lg shadow-sm max-w-[80%] text-sm">
+            Assalam o Alaikum! Main Sara hoon. Main aapki kya madad kar sakti hoon?
+        </div>
+    </div>
+
+    <div class="p-4 bg-white border-t flex items-center gap-2">
+        <input id="user-input" type="text" placeholder="Sawal likhein..." class="flex-1 border rounded-full px-4 py-2 focus:outline-none">
+        
+        <button id="voice-btn" class="bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition">
+            <i class="fas fa-microphone"></i>
+        </button>
+
+        <button id="send-btn" class="bg-green-600 text-white rounded-full p-3">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+
+    <script>
+        const sendBtn = document.getElementById('send-btn');
+        const userInput = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+
+        function addMessage(text, isUser = false) {
+            const div = document.createElement('div');
+            div.className = isUser ? "bg-blue-100 p-3 rounded-lg shadow-sm max-w-[80%] ml-auto text-sm" : "bg-white p-3 rounded-lg shadow-sm max-w-[80%] text-sm";
+            div.innerText = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        sendBtn.onclick = async () => {
+            const msg = userInput.value;
+            if(!msg) return;
+            addMessage(msg, true);
+            userInput.value = "";
+
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: msg, user_id: 'patient_001' })
+            });
+            const data = await res.json();
+            addMessage(data.reply);
+        };
+
+        // Voice Click Handler (For later LiveKit integration)
+        document.getElementById('voice-btn').onclick = () => {
+            alert("Voice Calling Feature is starting... connecting to LiveKit.");
+        };
+    </script>
+</body>
+</html>
