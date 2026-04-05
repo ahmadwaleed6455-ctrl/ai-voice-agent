@@ -29,7 +29,7 @@ def whatsapp_reply():
     )
 
     # Response nikalna
-    reply_text = completion.choices.message.content
+    reply_text = completion.choices''.message.content
 
     # Twilio ko jawab bhejna
     resp = MessagingResponse()
