@@ -103,3 +103,5 @@ livekit-plugins-google
 flask
 twilio
 groq
+firebase-admin
+
