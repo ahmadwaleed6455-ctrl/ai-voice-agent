@@ -32,24 +32,24 @@ else:
 with open("hospital_data.txt", "r", encoding="utf-8") as f:
     hospital_info = f.read()
 
-# --- WEB ROUTES ---
-@app.route('/')
-def index():
-    return render_template('index.html')
-
+# --- WEB CHAT API ---
 @app.route('/chat', methods=['POST'])
 def web_chat():
     data = request.json
     user_msg = data.get('message')
     user_id = data.get('user_id', 'anonymous')
 
-    prompt = f"System: {hospital_info}\nUser: {user_msg}\nSara:"
+    # Strict Prompt taake Korean ya koi aur zaban na bole
+    prompt = f"System: You are Sara, an AI assistant at Lady Reading Hospital (LRH). STRICTLY answer in Roman Urdu or Urdu. DO NOT use Korean, Chinese, or any other language. Use this data: {hospital_info}\nUser: {user_msg}\nSara:"
+    
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2  # Temperature kam karne se AI focus mein rehta hai
     )
-    # FIX: added here
-    reply = completion.choices.message.content
+    
+    # YAHAN LAZMI HAI
+    reply = completion.choices[0].message.content
 
     # Save to Firebase
     if fb_content:
@@ -61,7 +61,7 @@ def web_chat():
         })
 
     return jsonify({'reply': reply})
-
+    
 # --- WHATSAPP ROUTE ---
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
