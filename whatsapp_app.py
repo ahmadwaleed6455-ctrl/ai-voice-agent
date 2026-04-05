@@ -3,7 +3,7 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from google import genai
 from dotenv import load_dotenv
-
+print("🚀 WHATSAPP BOT IS STARTING...")
 load_dotenv()
 
 app = Flask(__name__)
