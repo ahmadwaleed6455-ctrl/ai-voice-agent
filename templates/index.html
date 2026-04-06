@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,7 +17,7 @@
 <body class="bg-gray-100 font-sans">
 
     <header class="bg-lrh text-white p-4 shadow-lg flex justify-between items-center">
-        <h1 class="text-xl font-bold"><i class="fas fa-hospital-user mr-2"></i> LRH Sara (AI Assistant)</h1>
+        <h1 class="text-xl font-bold"><i class="fas fa-hospital-user mr-2"></i> LRH Fahad (AI Assistant)</h1>
         <span class="text-sm bg-blue-700 px-2 py-1 rounded">Status: Online</span>
     </header>
 
@@ -25,7 +25,7 @@
         <div id="chat-box" class="chat-container overflow-y-auto bg-white rounded-lg shadow-inner p-4 mb-4 space-y-4 border border-gray-200">
             <div class="flex justify-start">
                 <div class="bg-blue-100 text-blue-800 p-3 rounded-lg max-w-[80%] shadow-sm">
-                    Assalam o Alaikum! Main Sara hoon. Main aapki kya madad kar sakti hoon?
+                    Assalam o Alaikum! Main Fahad hoon. Main aapki kya madad kar sakta hoon?
                 </div>
             </div>
         </div>
@@ -50,7 +50,6 @@
         const voiceBtn = document.getElementById('voice-btn');
         let currentRoom = null;
 
-        // 1. Function to add messages to UI
         function addMessage(text, isUser) {
             const div = document.createElement('div');
             div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
@@ -63,7 +62,7 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // 2. TEXT CHAT Logic
+        // TEXT CHAT Logic
         sendBtn.onclick = async () => {
             const msg = userInput.value.trim();
             if (!msg) return;
@@ -84,10 +83,10 @@
             }
         };
 
-        // 3. VOICE CALL (LiveKit) Logic
+        // VOICE CALL (LiveKit) Logic
         voiceBtn.onclick = async () => {
             if (currentRoom) {
-                currentRoom.disconnect();
+                await currentRoom.disconnect();
                 currentRoom = null;
                 voiceBtn.innerHTML = '<i class="fas fa-microphone text-xl"></i>';
                 voiceBtn.classList.replace('bg-red-600', 'bg-blue-600');
@@ -98,34 +97,45 @@
             voiceBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xl"></i>';
 
             try {
+                // Step A: Naya Token aur Unique Room lein
                 const res = await fetch('/get_voice_token');
+                if (!res.ok) throw new Error("Server se token nahi mila");
                 const data = await res.json();
                 
                 const room = new LivekitClient.Room();
                 await room.connect(data.url, data.token);
                 currentRoom = room;
                 
-                // Browser Audio Permissions
+                // Audio Permissions & Setup
                 await room.prepareConnection();
                 await room.startAudio();
                 await room.localParticipant.setMicrophoneEnabled(true);
                 
-                // AUDIO LISTENER
+                // Transcription Listener (Likha hua dekhne ke liye)
+                room.on('transcriptionReceived', (transcriptions, participant) => {
+                    transcriptions.forEach((trans) => {
+                        if (trans.isFinal) {
+                            const isUser = participant === room.localParticipant;
+                            addMessage(trans.text, isUser);
+                        }
+                    });
+                });
+
+                // Audio Output Listener
                 room.on('trackSubscribed', (track) => {
                     if (track.kind === 'audio') {
-                        console.log("Audio track connected!");
                         const audioElement = track.attach();
                         document.body.appendChild(audioElement);
                         audioElement.play().catch(e => console.error("Play error:", e));
                     }
                 });
 
-                // Status Update
+                // UI Update
                 voiceBtn.innerHTML = '<i class="fas fa-phone-slash text-xl"></i>';
                 voiceBtn.classList.replace('bg-blue-600', 'bg-red-600');
-                addMessage("Sara connected. Please speak...", false);
+                addMessage("Fahad connected. Aap bolna shuru karein...", false);
                 
-                // Force focus for audio
+                // Audio activate karne ke liye click force karein
                 document.body.click();
 
             } catch (error) {

@@ -44,11 +44,15 @@ except FileNotFoundError:
 def index():
     return render_template('index.html')
 
-# Voice Token (Mike connect karne ke liye)
+# app.py ke andar token wale route mein ye tabdeeli karein
 @app.route('/get_voice_token')
 def get_voice_token():
-    room_name = "lrh_voice_room"
-    participant_identity = f"patient_{uuid.uuid4().hex[:6]}"
+    import uuid
+    # Har call ke liye unique room name
+    room_name = f"lrh-room-{uuid.uuid4().hex[:6]}" 
+    participant_identity = f"user_{uuid.uuid4().hex[:4]}"
+    
+    # ... baki token generation code wahi rahega
     
     token = api.AccessToken(
         os.getenv("LIVEKIT_API_KEY"),
