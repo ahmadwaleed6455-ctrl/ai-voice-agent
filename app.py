@@ -72,7 +72,7 @@ def web_chat():
     user_msg = data.get('message')
     user_id = data.get('user_id', 'anonymous')
 
-    prompt = f"System: You are Fahad, an AI assistant at Lady Reading Hospital (LRH). STRICTLY answer in Roman Urdu or Urdu. Use this data: {hospital_info}\nUser: {user_msg}\nSara:"
+    prompt = f"System: You are an AI assistant at Lady Reading Hospital (LRH). STRICTLY answer in Roman Urdu or Urdu. Use this data: {hospital_info}\nUser: {user_msg}\nSara:"
     
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
