@@ -41,7 +41,7 @@ async def entrypoint(ctx: JobContext):
     avatar = simli.AvatarSession(
         simli_config=simli.SimliConfig(
             api_key=simli_key,
-            face_id="dd10cb5a-d31d-4f12-b69f-6db3383c006e" 
+            face_id="f0ba4efe-7946-45de-9955-c04a04c367b9" 
         )
     )
     
