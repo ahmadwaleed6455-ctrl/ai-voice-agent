@@ -18,7 +18,7 @@ def load_knowledge_base():
 
 my_data = load_knowledge_base()
 
-SYSTEM_PROMPT = f"You are Fahad, AI Assistant at LRH. Use this data: {my_data}. Speak Roman Urdu."
+SYSTEM_PROMPT = f"You are AI Assistant at LRH. Use this data: {my_data}. Speak Roman Urdu."
 
 class Assistant(Agent):
     def __init__(self) -> None:
@@ -26,13 +26,13 @@ class Assistant(Agent):
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
-    print("🚀 FAHAD IS ONLINE (Gemini 3.1 + Simli Avatar)")
+    print("🚀 AI Assistant IS ONLINE (Gemini 3.1 + Simli Avatar)")
 
     # 1. Realtime Model Session
     session = AgentSession(
         llm=google.realtime.RealtimeModel(
             model="gemini-3.1-flash-live-preview",
-            voice="Puck",
+            voice="NOVA",
         )
     )
 
