@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import requests
 from flask import Flask, request, jsonify, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -125,6 +126,56 @@ def web_chat():
 
     return jsonify({'reply': reply})
 
+# --- ANDROID SMS GATEWAY ROUTE ---
+@app.route("/sms-gateway", methods=['POST'])
+def sms_gateway_reply():
+    try:
+        # 1. Android App se data nikalna (App ke mutabiq keys badal sakti hain)
+        data = request.json
+        incoming_msg = data.get('message', '')
+        sender_number = data.get('phone', '')
+
+        print(f"📱 SMS Received from {sender_number}: {incoming_msg}")
+
+        # 2. Gemini 3.1 Pro Prompt (SMS oriented)
+        prompt = f"""
+        System: You are 'LRH Rahbar'. 
+        Rule: User is on SMS, so keep your answer EXTREMELY short (under 30 words).
+        Use this data: {hospital_info}
+        User: {incoming_msg}
+        LRH Rahbar:"""
+
+        response = ai_client.models.generate_content(
+            model='gemini-3.1-pro-preview',
+            contents=prompt
+        )
+        reply_text = response.text
+
+        # 3. Android App ko wapas bhejna (Reply bhejwanay ke liye)
+        # Yahan hum wo API call karenge jo aapki mobile app support karti hai
+        # Example for SMSGateway.me API:
+        # send_sms_via_mobile(sender_number, reply_text)
+
+        print(f"📤 SMS Reply Sent: {reply_text}")
+        
+        # App ko batana ke humne data receive kar liya
+        return jsonify({"status": "success", "reply": reply_text}), 200
+
+    except Exception as e:
+        print(f"❌ SMS Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# Helper function jo mobile app ki API hit karega
+def send_sms_via_mobile(number, text):
+    # Aapki select ki hui app ka URL aur Key yahan ayegi
+    api_url = "https://your-gateway-api.com/send"
+    payload = {
+        "to": number,
+        "message": text,
+        "key": "APNI_API_KEY_YAHAN_DALAIN"
+    }
+    requests.post(api_url, json=payload)
+    
 # WhatsApp Route (Twilio)
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
