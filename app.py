@@ -139,7 +139,7 @@ def whatsapp_reply():
     
     # --- NAYI GEMINI 3 FLASH API CALL ---
     response = ai_client.models.generate_content(
-        model='gemini-3-flash-preview',
+        model='gemini-2.5-flash',
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.2,
