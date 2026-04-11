@@ -107,7 +107,7 @@ def web_chat():
     
     # --- NAYI GEMINI 3 FLASH API CALL ---
     response = ai_client.models.generate_content(
-        model='gemini-3-flash-preview',
+        model='gemini-2.5-flash',
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.2,
@@ -153,7 +153,7 @@ def sms_gateway_reply():
         # Safe API Call
         try:
             response = ai_client.models.generate_content(
-                model='gemini-3.1-pro-preview',
+                model='gemini-2.5-flash',
                 contents=prompt
             )
             reply_text = response.text
@@ -161,21 +161,42 @@ def sms_gateway_reply():
             print(f"❌ Gemini Error: {ai_err}")
             reply_text = "Maaf kijiye, system thora busy hai."
 
-        # 4. Reply wapas bhejna (SMSGateway24 Format)
-        api_token = os.getenv("SMS_GATEWAY_KEY")
-        device_id = "APNI_DEVICE_ID_LIKHAIN" # <--- Ye lazmi check karein
+     # --- SMS GATEWAY 24 FINAL SEND (As per Docs) ---
+        api_token = os.getenv("SMS_GATEWAY_TOKEN")
+        device_id = os.getenv("SMS_DEVICE_ID")
 
-        if api_token and device_id != "APNI_DEVICE_ID_LIKHAIN":
+        if api_token and device_id:
+            # DOCUMENTATION KA SAHI ENDPOINT:
+            api_url = "https://smsgateway24.com/getdata/addsms"
+            
             payload = {
                 "token": api_token,
                 "sendto": sender_number,
                 "body": reply_text,
-                "device_id": device_id
+                "device_id": device_id,
+                "sim": 1,        # 1 for Onic, 0 for Jazz
+                "urgent": 1      # High priority
             }
-            requests.post("https://smsgateway24.com/getapi/sendmessage", data=payload)
-            print(f"📤 Reply sent via SIM: {reply_text}")
+            
+            # Request bhej rahe hain (Form Data format mein)
+            r = requests.post(api_url, data=payload)
+            
+            # Response check
+            try:
+                res_json = r.json()
+                if res_json.get('error') == 0:
+                    print(f"🎯 SUCCESS! SMS ID: {res_json.get('sms_id')} - Jawab bhej diya gaya.")
+                else:
+                    print(f"❌ Gateway Error: {res_json.get('message')}")
+            except:
+                # Agar JSON na ho toh error filter
+                if "404" in r.text:
+                    print("❌ Abhi bhi 404 aa raha hai! Link check karein.")
+                else:
+                    print(f"⚠️ Raw Response: {r.text[:100]}")
+
         else:
-            print("⚠️ SMS Gateway Key or Device ID missing in Environment Variables!")
+            print("❌ Error: .env mein Token ya Device ID missing hai!")
 
         return "OK", 200
 
