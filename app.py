@@ -126,55 +126,62 @@ def web_chat():
 
     return jsonify({'reply': reply})
 
-# --- ANDROID SMS GATEWAY ROUTE ---
 @app.route("/sms-gateway", methods=['POST'])
 def sms_gateway_reply():
     try:
-        # 1. Android App se data nikalna (App ke mutabiq keys badal sakti hain)
-        data = request.json
-        incoming_msg = data.get('message', '')
-        sender_number = data.get('phone', '')
-
-        print(f"📱 SMS Received from {sender_number}: {incoming_msg}")
-
-        # 2. Gemini 3.1 Pro Prompt (SMS oriented)
-        prompt = f"""
-        System: You are 'LRH Rahbar'. 
-        Rule: User is on SMS, so keep your answer EXTREMELY short (under 30 words).
-        Use this data: {hospital_info}
-        User: {incoming_msg}
-        LRH Rahbar:"""
-
-        response = ai_client.models.generate_content(
-            model='gemini-3.1-pro-preview',
-            contents=prompt
-        )
-        reply_text = response.text
-
-        # 3. Android App ko wapas bhejna (Reply bhejwanay ke liye)
-        # Yahan hum wo API call karenge jo aapki mobile app support karti hai
-        # Example for SMSGateway.me API:
-        # send_sms_via_mobile(sender_number, reply_text)
-
-        print(f"📤 SMS Reply Sent: {reply_text}")
+        # 1. Pehle check karein ke data kis format mein aa raha hai
+        # SMSGateway24 aksar Form data bhejta hai, kuch apps JSON bhejti hain
+        incoming_data = request.form if request.form else request.json
         
-        # App ko batana ke humne data receive kar liya
-        return jsonify({"status": "success", "reply": reply_text}), 200
+        if not incoming_data:
+            print("⚠️ No data received in request!")
+            return "No data", 400
+
+        # 2. Data nikalne ki koshish (Alag alag apps ke liye generic check)
+        incoming_msg = incoming_data.get('body') or incoming_data.get('message') or incoming_data.get('text')
+        sender_number = incoming_data.get('address') or incoming_data.get('phone') or incoming_data.get('from')
+
+        if not incoming_msg or not sender_number:
+            print(f"⚠️ Missing info: Msg={incoming_msg}, Phone={sender_number}")
+            return "Missing info", 400
+
+        print(f"📱 SMS Received: {incoming_msg} from {sender_number}")
+
+        # 3. Gemini 3.1 Pro Call
+        prompt = f"System: You are LRH Rahbar. Reply briefly in Roman Urdu/Pashto. Data: {hospital_info}\nUser: {incoming_msg}"
+        
+        # Safe API Call
+        try:
+            response = ai_client.models.generate_content(
+                model='gemini-3.1-pro-preview',
+                contents=prompt
+            )
+            reply_text = response.text
+        except Exception as ai_err:
+            print(f"❌ Gemini Error: {ai_err}")
+            reply_text = "Maaf kijiye, system thora busy hai."
+
+        # 4. Reply wapas bhejna (SMSGateway24 Format)
+        api_token = os.getenv("SMS_GATEWAY_KEY")
+        device_id = "APNI_DEVICE_ID_LIKHAIN" # <--- Ye lazmi check karein
+
+        if api_token and device_id != "APNI_DEVICE_ID_LIKHAIN":
+            payload = {
+                "token": api_token,
+                "sendto": sender_number,
+                "body": reply_text,
+                "device_id": device_id
+            }
+            requests.post("https://smsgateway24.com/getapi/sendmessage", data=payload)
+            print(f"📤 Reply sent via SIM: {reply_text}")
+        else:
+            print("⚠️ SMS Gateway Key or Device ID missing in Environment Variables!")
+
+        return "OK", 200
 
     except Exception as e:
-        print(f"❌ SMS Error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# Helper function jo mobile app ki API hit karega
-def send_sms_via_mobile(number, text):
-    # Aapki select ki hui app ka URL aur Key yahan ayegi
-    api_url = "https://your-gateway-api.com/send"
-    payload = {
-        "to": number,
-        "message": text,
-        "key": "APNI_API_KEY_YAHAN_DALAIN"
-    }
-    requests.post(api_url, json=payload)
+        print(f"🔥 Major Crash: {e}")
+        return "Internal Server Error", 500
     
 # WhatsApp Route (Twilio)
 @app.route("/whatsapp", methods=['POST'])
