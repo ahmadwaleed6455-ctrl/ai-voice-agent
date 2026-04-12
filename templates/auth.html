@@ -73,14 +73,15 @@
             sendEmailVerification // 🔴 NAYA FUNCTION: Verification ke liye
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+       // Aapki Firebase Keys (Ab Flask backend se aa rahi hain)
         const firebaseConfig = {
-            apiKey: "AIzaSyCbyq7zaeW1NlrqtE-jV1AAm4s8EDB7FnQ",
-            authDomain: "lrh-ai-assistant.firebaseapp.com",
-            projectId: "lrh-ai-assistant",
-            storageBucket: "lrh-ai-assistant.firebasestorage.app",
-            messagingSenderId: "921177386882",
-            appId: "1:921177386882:web:bc3110f4f9c551ee45e99b",
-            measurementId: "G-8MJS61M38L"
+            apiKey: "{{ fb_config.apiKey }}",
+            authDomain: "{{ fb_config.authDomain }}",
+            projectId: "{{ fb_config.projectId }}",
+            storageBucket: "{{ fb_config.storageBucket }}",
+            messagingSenderId: "{{ fb_config.messagingSenderId }}",
+            appId: "{{ fb_config.appId }}",
+            measurementId: "{{ fb_config.measurementId }}"
         };
 
         const app = initializeApp(firebaseConfig);
