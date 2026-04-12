@@ -7,73 +7,354 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 flex min-h-screen">
+<body class="bg-gray-100 flex flex-col md:flex-row min-h-screen relative overflow-x-hidden">
 
-    <aside class="w-64 bg-[#002d62] text-white flex flex-col shadow-2xl z-10">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
+
+    <aside id="sidebar" class="bg-[#002d62] text-white flex flex-col shadow-2xl z-50 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-300 ease-in-out w-64">
         <div class="p-6 text-center border-b border-blue-800">
             <img src="/static/img/rehbar_icon.png" alt="Rehbar Logo" class="h-12 mx-auto mb-2 bg-white rounded-full p-1">
             <h2 class="text-lg font-bold">Admin Panel</h2>
             <p class="text-xs text-blue-300">Master Control</p>
         </div>
+        
         <nav class="flex-1 p-4 space-y-2">
-            <a href="#" class="flex items-center p-3 bg-blue-800 rounded-lg"><i class="fas fa-users w-6"></i> User Restrictions</a>
-            <a href="#" class="flex items-center p-3 hover:bg-blue-800 rounded-lg transition"><i class="fas fa-comment-sms w-6"></i> SMS Logs</a>
-            <a href="#" class="flex items-center p-3 hover:bg-blue-800 rounded-lg transition"><i class="fas fa-shield-halved w-6"></i> AI Guardrails</a>
+            <a href="/" class="block p-3 text-blue-200 hover:text-white transition rounded-lg mb-2">
+                <i class="fas fa-home w-6"></i> Wapas Rehbar
+            </a>
+            
+            <button onclick="switchTab('restrictions')" id="btn-restrictions" class="w-full text-left flex items-center p-3 bg-blue-800 hover:bg-blue-800 rounded-lg transition">
+                <i class="fas fa-users w-6"></i> User Restrictions
+            </button>
+            <button onclick="switchTab('sms')" id="btn-sms" class="w-full text-left flex items-center p-3 hover:bg-blue-800 rounded-lg transition">
+                <i class="fas fa-comment-sms w-6"></i> SMS Logs
+            </button>
+            <button onclick="switchTab('guardrails')" id="btn-guardrails" class="w-full text-left flex items-center p-3 hover:bg-blue-800 rounded-lg transition">
+                <i class="fas fa-shield-halved w-6"></i> AI Guardrails
+            </button>
         </nav>
+        
         <div class="p-4 border-t border-blue-800 text-sm">
             <p><i class="fas fa-user-shield text-green-400"></i> Fahad Gul</p>
             <a href="/logout" class="text-red-300 hover:text-red-100 mt-2 inline-block"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </aside>
 
-    <main class="flex-1 p-8">
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
-                <p class="text-gray-500">Manage LRH Digital Rehbar access and logs.</p>
+    <main class="flex-1 p-4 md:p-8 w-full overflow-hidden">
+        <header class="flex justify-between items-center mb-6 md:mb-8">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="md:hidden text-[#002d62] text-2xl focus:outline-none bg-white p-2 rounded-lg shadow-sm">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+                    <p class="text-sm md:text-base text-gray-500">Manage LRH Digital Rehbar access and logs.</p>
+                </div>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-[#002d62]">
                 <h3 class="text-gray-500 text-sm font-bold uppercase">Total Users</h3>
-                <p class="text-3xl font-bold text-gray-800">124</p>
+                <p class="text-3xl font-bold text-gray-800">{{ total_users }}</p>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-green-500">
-                <h3 class="text-gray-500 text-sm font-bold uppercase">SMS Sent Today</h3>
-                <p class="text-3xl font-bold text-gray-800">42</p>
+                <h3 class="text-gray-500 text-sm font-bold uppercase">Total AI Chats</h3>
+                <p class="text-3xl font-bold text-gray-800">{{ total_chats }}</p>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-500">
                 <h3 class="text-gray-500 text-sm font-bold uppercase">Blocked Accounts</h3>
-                <p class="text-3xl font-bold text-gray-800">3</p>
+                <p class="text-3xl font-bold text-gray-800">{{ blocked_count }}</p>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-700">User Management (Block/Unblock)</h2>
-                <button class="bg-[#002d62] text-white px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-plus"></i> Add Restriction</button>
+        <div id="tab-restrictions" class="admin-tab block">
+            
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+                <div class="px-4 md:px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0 bg-gray-50">
+                    <h2 class="font-bold text-gray-700">User Management (Block/Unblock)</h2>
+                    <button onclick="openModal()" class="bg-[#002d62] hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-bold transition w-full md:w-auto">
+                        <i class="fas fa-plus"></i> Add Restriction
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[500px]">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase">
+                                <th class="p-4 font-bold border-b">Email / Phone</th>
+                                <th class="p-4 font-bold border-b">Status</th>
+                                <th class="p-4 font-bold border-b text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in blocked_users %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-4 border-b border-gray-100 font-medium">{{ user.id }}</td>
+                                <td class="p-4 border-b border-gray-100">
+                                    <span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-bold">Blocked</span>
+                                </td>
+                                <td class="p-4 border-b border-gray-100 text-right">
+                                    <button onclick="unblockUser('{{ user.id }}')" class="text-green-600 hover:text-green-800 font-bold text-sm bg-green-50 px-3 py-1 rounded-lg transition shadow-sm border border-green-200">
+                                        <i class="fas fa-unlock mr-1"></i> Unblock
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="p-4 text-center text-gray-500 border-b border-gray-100">Koi user blocked nahi hai.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase">
-                        <th class="p-4 font-bold border-b">Email / Phone</th>
-                        <th class="p-4 font-bold border-b">Status</th>
-                        <th class="p-4 font-bold border-b text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-4 border-b border-gray-100 font-medium">spam.user@gmail.com</td>
-                        <td class="p-4 border-b border-gray-100"><span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-bold">Blocked</span></td>
-                        <td class="p-4 border-b border-gray-100 text-right">
-                            <button class="text-gray-400 hover:text-[#002d62]"><i class="fas fa-edit"></i></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                    <h2 class="font-bold text-gray-700"><i class="fas fa-cogs mr-2"></i>System Limits & VIP IPs</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Guest Message Limit</label>
+                            <input type="number" id="setGuestLimit" value="{{ settings.guest_limit }}" placeholder="e.g. 10" class="w-full border border-gray-300 p-2 rounded-lg mt-1 focus:ring-2 focus:ring-[#002d62] outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">User Message Limit</label>
+                            <input type="number" id="setUserLimit" value="{{ settings.user_limit }}" placeholder="e.g. 10" class="w-full border border-gray-300 p-2 rounded-lg mt-1 focus:ring-2 focus:ring-[#002d62] outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Guest Call Time (Seconds)</label>
+                            <input type="number" id="setGuestTime" value="{{ settings.guest_call_time }}" placeholder="e.g. 60" class="w-full border border-gray-300 p-2 rounded-lg mt-1 focus:ring-2 focus:ring-[#002d62] outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">VIP IPs (Hospital/Ghar) - Comma Separated</label>
+                        <input type="text" id="setVipIps" value="{{ settings.vip_ips | join(', ') }}" placeholder="192.168.1.100, 10.0.0.5, 127.0.0.1" class="w-full border border-gray-300 p-2 rounded-lg mt-1 focus:ring-2 focus:ring-[#002d62] outline-none font-mono text-blue-600">
+                        <p class="text-xs text-gray-400 mt-1">In IP Addresses par koi limits apply nahi hongi (Unlimited Access).</p>
+                    </div>
+                    <button onclick="updateSystemSettings()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition mt-2">
+                        <i class="fas fa-save mr-2"></i>Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-sms" class="admin-tab hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h2 class="font-bold text-gray-700"><i class="fas fa-comment-sms mr-2"></i>Recent SMS Logs</h2>
+                    <button onclick="window.location.reload()" class="text-sm bg-blue-100 text-[#002d62] px-3 py-1 rounded hover:bg-blue-200 transition">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase">
+                                <th class="p-4 font-bold border-b">Time</th>
+                                <th class="p-4 font-bold border-b">Sender</th>
+                                <th class="p-4 font-bold border-b">Message</th>
+                                <th class="p-4 font-bold border-b">AI Reply</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in sms_logs %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-4 border-b border-gray-100 text-xs text-gray-500 whitespace-nowrap">{{ log.time_str }}</td>
+                                <td class="p-4 border-b border-gray-100 font-medium">{{ log.sender }}</td>
+                                <td class="p-4 border-b border-gray-100 text-sm">{{ log.message }}</td>
+                                <td class="p-4 border-b border-gray-100 text-sm text-green-700">{{ log.reply }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-gray-500 border-b border-gray-100">Koi SMS Logs majood nahi hain.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-guardrails" class="admin-tab hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                    <h2 class="font-bold text-gray-700"><i class="fas fa-shield-halved mr-2"></i>AI Guardrails (Restricted Words)</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <p class="text-sm text-gray-600 mb-2">Agar user in mein se koi bhi lafz (word) istamal karega, toh AI medical advice nahi dega balke block message dega.</p>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Restricted Keywords (Comma Separated)</label>
+                        <textarea id="setGuardrails" rows="4" class="w-full border border-gray-300 p-3 rounded-lg mt-1 focus:ring-2 focus:ring-[#002d62] outline-none">{{ settings.guardrail_keywords | join(', ') }}</textarea>
+                    </div>
+                    <button onclick="updateGuardrails()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition">
+                        <i class="fas fa-save mr-2"></i>Save Guardrails
+                    </button>
+                </div>
+            </div>
         </div>
     </main>
 
+    <div id="blockModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-96 transform transition-all">
+            <h3 class="text-xl font-bold mb-2 text-[#002d62]"><i class="fas fa-ban text-red-500 mr-2"></i>Block User</h3>
+            <p class="text-xs text-gray-500 mb-4">User ka email ya phone number darj karein jise aap block karna chahte hain.</p>
+            
+            <input type="text" id="userIdToBlock" placeholder="e.g. user@gmail.com or whatsapp:+923..." class="w-full border border-gray-300 p-3 rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-[#002d62]">
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition">Cancel</button>
+                <button onclick="submitBlockUser()" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition shadow-md">Block User</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🖱️ Switch Tabs Logic
+        function switchTab(tabName) {
+            document.querySelectorAll('.admin-tab').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('block');
+            
+            ['restrictions', 'sms', 'guardrails'].forEach(btn => {
+                const el = document.getElementById('btn-' + btn);
+                if (btn === tabName) { 
+                    el.classList.add('bg-blue-800'); 
+                    el.classList.remove('hover:bg-blue-800'); 
+                } else { 
+                    el.classList.remove('bg-blue-800'); 
+                    el.classList.add('hover:bg-blue-800'); 
+                }
+            });
+            
+            if(window.innerWidth < 768) { toggleSidebar(); }
+        }
+
+        // 📱 Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // 🧱 Modal Controls
+        function openModal() {
+            document.getElementById('blockModal').classList.remove('hidden');
+        }
+        
+        function closeModal() {
+            document.getElementById('blockModal').classList.add('hidden');
+            document.getElementById('userIdToBlock').value = ''; 
+        }
+
+        // 🚫 Block User API
+        async function submitBlockUser() {
+            const userId = document.getElementById('userIdToBlock').value.trim();
+            if (!userId) {
+                alert("Baraye karam User ka Email ya Phone Number darj karein.");
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/block_user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+
+                const result = await response.json();
+                if (result.success) { 
+                    alert("✅ " + result.success); 
+                    closeModal(); 
+                    window.location.reload(); 
+                } else { 
+                    alert("❌ Error: " + result.error); 
+                }
+            } catch (error) {
+                alert("Error connecting to server.");
+            }
+        }
+
+        // 🔓 Unblock User API
+        async function unblockUser(userId) {
+            if(!confirm(`Kya aap waqai '${userId}' ko unblock karna chahte hain?`)) return;
+
+            try {
+                const response = await fetch('/admin/unblock_user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+
+                const result = await response.json();
+                if (result.success) { 
+                    alert("✅ " + result.success); 
+                    window.location.reload(); 
+                } else { 
+                    alert("❌ Error: " + result.error); 
+                }
+            } catch (error) {
+                alert("Error connecting to server.");
+            }
+        }
+
+        // ⚙️ Update System Limits API
+        async function updateSystemSettings() {
+            const payload = {};
+            const gLimit = document.getElementById('setGuestLimit').value;
+            const uLimit = document.getElementById('setUserLimit').value;
+            const gTime = document.getElementById('setGuestTime').value;
+            const vips = document.getElementById('setVipIps').value;
+
+            if(gLimit) payload.guest_limit = parseInt(gLimit);
+            if(uLimit) payload.user_limit = parseInt(uLimit);
+            if(gTime) payload.guest_call_time = parseInt(gTime);
+            if(vips) payload.vip_ips = vips;
+
+            try {
+                const response = await fetch('/admin/update_settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if(result.success) {
+                    alert("✅ Settings successfully update ho gayi hain!");
+                } else {
+                    alert("❌ Error: " + result.error);
+                }
+            } catch (error) {
+                alert("Error connecting to server.");
+            }
+        }
+
+        // 🛡️ Update Guardrails API
+        async function updateGuardrails() {
+            const guardrails = document.getElementById('setGuardrails').value;
+            
+            try {
+                const response = await fetch('/admin/update_settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ guardrail_keywords: guardrails })
+                });
+
+                const result = await response.json();
+                if(result.success) { 
+                    alert("✅ Guardrails successfully update ho gaye hain!"); 
+                } else { 
+                    alert("❌ Error: " + result.error); 
+                }
+            } catch (error) {
+                alert("Error connecting to server.");
+            }
+        }
+    </script>
 </body>
 </html>
