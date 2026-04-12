@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRH Rehbar - Master Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 flex min-h-screen">
+
+    <aside class="w-64 bg-[#002d62] text-white flex flex-col shadow-2xl z-10">
+        <div class="p-6 text-center border-b border-blue-800">
+            <img src="/static/img/rehbar_icon.png" alt="Rehbar Logo" class="h-12 mx-auto mb-2 bg-white rounded-full p-1">
+            <h2 class="text-lg font-bold">Admin Panel</h2>
+            <p class="text-xs text-blue-300">Master Control</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="#" class="flex items-center p-3 bg-blue-800 rounded-lg"><i class="fas fa-users w-6"></i> User Restrictions</a>
+            <a href="#" class="flex items-center p-3 hover:bg-blue-800 rounded-lg transition"><i class="fas fa-comment-sms w-6"></i> SMS Logs</a>
+            <a href="#" class="flex items-center p-3 hover:bg-blue-800 rounded-lg transition"><i class="fas fa-shield-halved w-6"></i> AI Guardrails</a>
+        </nav>
+        <div class="p-4 border-t border-blue-800 text-sm">
+            <p><i class="fas fa-user-shield text-green-400"></i> Fahad Gul</p>
+            <a href="/logout" class="text-red-300 hover:text-red-100 mt-2 inline-block"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+                <p class="text-gray-500">Manage LRH Digital Rehbar access and logs.</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-[#002d62]">
+                <h3 class="text-gray-500 text-sm font-bold uppercase">Total Users</h3>
+                <p class="text-3xl font-bold text-gray-800">124</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-green-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase">SMS Sent Today</h3>
+                <p class="text-3xl font-bold text-gray-800">42</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase">Blocked Accounts</h3>
+                <p class="text-3xl font-bold text-gray-800">3</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-bold text-gray-700">User Management (Block/Unblock)</h2>
+                <button class="bg-[#002d62] text-white px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-plus"></i> Add Restriction</button>
+            </div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase">
+                        <th class="p-4 font-bold border-b">Email / Phone</th>
+                        <th class="p-4 font-bold border-b">Status</th>
+                        <th class="p-4 font-bold border-b text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-4 border-b border-gray-100 font-medium">spam.user@gmail.com</td>
+                        <td class="p-4 border-b border-gray-100"><span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-bold">Blocked</span></td>
+                        <td class="p-4 border-b border-gray-100 text-right">
+                            <button class="text-gray-400 hover:text-[#002d62]"><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+</html>

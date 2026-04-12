@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRH Digital Rehbar - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .lrh-blue { color: #004a99; }
+        .bg-lrh { background-color: #004a99; }
+        .lrh-border { border-color: #004a99; }
+    </style>
+</head>
+<body class="bg-[#fdfbf7] min-h-screen flex flex-col items-center p-0">
+
+    <div class="w-full bg-white py-4 px-6 shadow-sm border-b flex justify-start">
+        <img src="/static/img/lrh_official_logo.png" alt="LRH Header" class="h-12 md:h-16">
+    </div>
+
+    <div class="flex-1 flex flex-col items-center justify-center w-full max-w-md px-6">
+        <div class="relative mb-8">
+            <img src="/static/img/rehbar_icon.png" alt="Digital Rehbar" class="w-64 h-64 object-contain animate-pulse">
+            <div class="absolute -z-10 inset-0 bg-blue-100 blur-3xl opacity-30 rounded-full"></div>
+        </div>
+
+        <div class="text-center space-y-2 mb-10">
+            <h1 class="text-[#002d62] text-2xl font-bold italic">"میں ہوں آپ کے ایل آر ایچ کا ڈیجیٹل رہبر"</h1>
+            <h1 class="text-[#002d62] text-xl font-bold">"زه یم ستاسو ده ایل آر ایچ ډیجیټل رہبر"</h1>
+        </div>
+
+        <div class="w-full bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-gray-100">
+            <div id="login-fields" class="space-y-4">
+                <input type="email" id="email" placeholder="Email Address" class="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#002d62] outline-none">
+                <input type="password" id="password" placeholder="Password" class="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#002d62] outline-none">
+                
+                <button id="main-auth-btn" onclick="handleAuthAction()" class="w-full bg-[#002d62] text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-900 transition">
+                    Login / لاګ ان شئ
+                </button>
+
+                <div class="flex justify-between text-xs text-gray-500 font-medium pt-2">
+                    <button onclick="showForgot()">Forget Password?</button>
+                    <button id="toggle-auth-btn" onclick="showSignup()" class="text-[#002d62] font-bold">Create New Account</button>
+                </div>
+            </div>
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-gray-400">Or</span></div>
+            </div>
+
+            <button onclick="googleLogin()" class="w-full border-2 border-gray-200 py-2 rounded-xl flex items-center justify-center hover:bg-gray-50 transition">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3">
+                Continue with Gmail
+            </button>
+        </div>
+    </div>
+
+    <div class="w-full text-right p-6 mt-4">
+        <p class="text-xs font-bold text-gray-600">Developed By Fahad</p>
+        <p class="text-[10px] text-gray-500">fahadgul253@gmail.com</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            sendPasswordResetEmail,
+            sendEmailVerification // 🔴 NAYA FUNCTION: Verification ke liye
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCbyq7zaeW1NlrqtE-jV1AAm4s8EDB7FnQ",
+            authDomain: "lrh-ai-assistant.firebaseapp.com",
+            projectId: "lrh-ai-assistant",
+            storageBucket: "lrh-ai-assistant.firebasestorage.app",
+            messagingSenderId: "921177386882",
+            appId: "1:921177386882:web:bc3110f4f9c551ee45e99b",
+            measurementId: "G-8MJS61M38L"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        window.authMode = 'login'; 
+
+        // 1. Google Login (Ye pehle se verified hota hai)
+        window.googleLogin = async function() {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                handleBackendRedirect(result.user.email);
+            } catch (error) {
+                alert("Google Login Failed: " + error.message);
+            }
+        };
+
+        // 2. Email Login / Signup Process (With Verification)
+        window.handleAuthAction = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if(!email || !password) {
+                alert("Baraye karam email aur password darj karein.");
+                return;
+            }
+
+            try {
+                let userCredential;
+                
+                // 📝 SIGNUP LOGIC
+                if (window.authMode === 'signup') {
+                    userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    
+                    // 🔴 Yahan Verification Email Bheji Ja Rahi Hai
+                    await sendEmailVerification(userCredential.user);
+                    
+                    // User ko logout kar rahe hain taake bina verify kiye andar na jaye
+                    await auth.signOut();
+                    
+                    alert("✅ Account ban gaya hai! Ek verification link aapki email (" + email + ") par bhej diya gaya hai. Baraye karam apna Inbox ya Spam folder check karein aur verify karne ke baad Login karein.");
+                    showSignup(); // Wapas login screen par layein
+                    return; 
+                } 
+                
+                // 🔐 LOGIN LOGIC
+                else {
+                    userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    
+                    // 🔴 Yahan Check kar rahe hain ke email verify hui ya nahi
+                    if (!userCredential.user.emailVerified) {
+                        await auth.signOut(); // Block access
+                        alert("🛑 Aapka account abhi tak verify nahi hua! Apna inbox (ya Spam folder) check karein aur verification link par click karein.");
+                        return;
+                    }
+                }
+                
+                // Agar verify ho chuka hai toh andar jane do
+                handleBackendRedirect(userCredential.user.email);
+                
+            } catch (error) {
+                // Agar password ghalat ho ya account na ho
+                alert("Error: " + error.message);
+            }
+        };
+
+        // 3. Forget Password
+        window.showForgot = async function() {
+            const email = document.getElementById('email').value;
+            if(!email) {
+                alert("Password reset karne ke liye pehle oopar apna Email type karein.");
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("✅ Password reset link bhej diya gaya hai! Apna Inbox aur Spam folder laazmi check karein.");
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        // 4. Toggle Form UI
+        window.showSignup = function() {
+            const mainBtn = document.getElementById('main-auth-btn');
+            const toggleBtn = document.getElementById('toggle-auth-btn');
+
+            if (window.authMode === 'login') {
+                window.authMode = 'signup';
+                mainBtn.innerText = "Create Account / اکاونټ جوړ کړئ";
+                toggleBtn.innerText = "Back to Login";
+            } else {
+                window.authMode = 'login';
+                mainBtn.innerText = "Login / لاګ ان شئ";
+                toggleBtn.innerText = "Create New Account";
+            }
+        };
+
+        // 5. Backend Redirect
+        async function handleBackendRedirect(email) {
+            const response = await fetch('/login_success', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            const data = await response.json();
+            if(data.redirect) {
+                window.location.replace(data.redirect);
+            }
+        }
+    </script>
+</body>
+</html>
